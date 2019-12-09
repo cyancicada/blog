@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>首页_我的博客 - 一个站在开发语言爱好者之路的技术员我的博客网站</title>
+    <meta name="keywords" content="我的博客,我的博客,我的博客模板,"/>
+    <meta name="description" content="我的博客，是一个站在开发语言爱好者之路的程序员个人网站，提供我的博客模板免费资源下载的个人原创网站。"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/css/base.css" rel="stylesheet">
+    <link href="/static/css/index.css" rel="stylesheet">
+    <link href="/static/css/info.css" rel="stylesheet">
+    <link href="/static/css/m.css" rel="stylesheet">
+    <link href="/static/js/layui/css/layui.css" rel="stylesheet"/>
+    <script src="/static/js/local/jquery.min.js"></script>
+    <script src="/static/js/local/jquery.easyfader.min.js"></script>
+    <script src="/static/js/local/hc-sticky.js"></script>
+    <script src="/static/js/local/comm.js"></script>
+    <script src="/static/js/local/scrollReveal.js"></script>
+    <script src="/static/js/layui/layui.all.js"></script>
+    <script src="/static/js/common/common.js"></script>
+    <!--[if lt IE 9]>
+    <script src="/static/js/local/modernizr.js"></script>
+    <![endif]-->
+</head>
+<body>
+<header class="header-navigation" id="header">
+    <nav>
+        <div class="logo"><a href="./index.html">我的博客</a></div>
+        <h2 id="mnavh"><span class="navicon"></span></h2>
+        <ul id="starlist">
+            <li><a href="index.html">网站首页</a></li>
+        </ul>
+        <div class="searchbox">
+            <div id="search_bar" class="search_bar">
+                <form id="searchform" action="[!--news.url--]e/search/index.php" method="post" name="searchform">
+                    <input class="input" placeholder="想搜点什么呢.." type="text" name="keyboard" id="keyboard">
+                    <input type="hidden" name="show" value="title"/>
+                    <input type="hidden" name="tempid" value="1"/>
+                    <input type="hidden" name="tbname" value="news">
+                    <input type="hidden" name="Submit" value="搜索"/>
+                    <p class="search_ico"><span></span></p>
+                </form>
+            </div>
+        </div>
+    </nav>
+</header>
+<article>
+    <main>
+        <div class="infosbox">
+            <div class="newsview" id="article-info">
+
+            </div>
+            <div class="share">
+                <p class="diggit">
+                    <a href="JavaScript:likes();">
+                        很赞哦！ </a>( <b id="like-num">0</b> )
+                </p>
+            </div>
+        </div>
+    </main>
+    <aside class="r_box">
+        <div class="tuijian">
+            <h2 id="tab"><a href="#" class="current">点击排行</a><a href="#">站长推荐</a></h2>
+
+            <div id="content">
+
+                <ul style="display:block;" id="ranks">
+                </ul>
+                <ul id="for-you">
+
+                </ul>
+            </div>
+        </div>
+        <div class="guanzhu">
+            <h2>关注我 么么哒</h2>
+            <ul>
+                <img src="images/wvx.jpg">
+            </ul>
+        </div>
+
+    </aside>
+</article>
+<footer>
+    <p>Design by <a href="http://www.yangqq.com" target="_blank">我的博客</a> <a href="/">蜀ICP备11002373号-1</a></p>
+</footer>
+<a href="#" class="cd-top">Top</a>
+</body>
+<script id="starlist-script" type="text/html">
+    <li><a href="index.html">网站首页</a></li>
+    {{#  layui.each(d.column, function(index, item){ }}
+    <li><a href="{{ item.link }}?cid={{ item.id }}">{{ item.name }}</a></li>
+    {{# }) }}
+
+</script>
+<!--like-num-->
+<script id="like-num-script" type="text/html">
+    {{ d.likesNum }}
+</script>
+
+<script id="ranks-script" type="text/html">
+    {{#  layui.each(d.ranks, function(index, item){ }}
+    <li><a href="/front/article.html?id={{ item.id }}" target="_blank">{{ item.title }}</a></li>
+    {{# }) }}
+</script>
+<script id="for-you-script" type="text/html">
+    {{#  layui.each(d.forYou, function(index, item){ }}
+    <li><a href="/front/article.html?id={{ item.id }}" target="_blank">{{ item.title }}</a></li>
+    {{# }) }}
+</script>
+
+<script id="article-info-script" type="text/html">
+
+
+    <h3 class="news_title">{{ d.title }}</h3>
+    <div class="bloginfo">
+        <ul>
+            <li class="lmname">{{ d.columnName }}</li>
+            <li class="timer">时间：{{ d.createTime }}</li>
+            <li class="view">{{ d.viewNum }}人已阅读</li>
+        </ul>
+    </div>
+    <div class="news_about"><strong>简介</strong>
+        {{ d.intro }}
+    </div>
+    <div class="news_con">
+
+        {{ d.content }}
+    </div>
+
+</script>
+
+
+
+<script>
+    var indexApi = common.host + "/api/article";
+    var likeApi = common.host + "/api/article/like";
+    var articleId = parseInt(common.getQueryString('id'));
+    layui.use(['laytpl', 'carousel'], function () {
+        var layTpl = layui.laytpl, carousel = layui.carousel;
+        common.url = indexApi;
+        common.method = 'POST';
+        common.data = JSON.stringify({id: articleId});
+        common.ajax(function (res) {
+            layTpl(document.getElementById('starlist-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("starlist").innerHTML = html;
+            });
+
+            //article-info-script
+            layTpl(document.getElementById('article-info-script').innerHTML).render(res.data.article, function (html) {
+                document.getElementById("article-info").innerHTML = html;
+            });
+            //like-num-script
+            layTpl(document.getElementById('like-num-script').innerHTML).render(res.data.article, function (html) {
+                document.getElementById("like-num").innerHTML = html;
+            });
+            //ranks
+            layTpl(document.getElementById('ranks-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("ranks").innerHTML = html;
+            });
+            //forYou
+            layTpl(document.getElementById('for-you-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("for-you").innerHTML = html;
+            });
+
+        });
+
+    });
+
+    function likes() {
+        common.url = likeApi;
+        common.method = 'POST';
+        common.data = JSON.stringify({id: articleId});
+        common.ajax(function (res) {
+            if (res.code == 0) {
+                var likeNum = parseInt(document.getElementById('like-num').innerText);
+                document.getElementById('like-num').innerText = (likeNum + 1);
+            }
+        });
+    }
+</script>
+</html>

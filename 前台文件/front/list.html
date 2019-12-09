@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>首页_我的博客 - 一个站在开发语言爱好者之路的技术员我的博客网站</title>
+    <meta name="keywords" content="我的博客,我的博客,我的博客模板,"/>
+    <meta name="description" content="我的博客，是一个站在开发语言爱好者之路的程序员个人网站，提供我的博客模板免费资源下载的个人原创网站。"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="/static/css/base.css" rel="stylesheet">
+    <link href="/static/css/index.css" rel="stylesheet">
+    <link href="/static/css/m.css" rel="stylesheet">
+    <link href="/static/js/layui/css/layui.css" rel="stylesheet"/>
+    <script src="/static/js/local/jquery.min.js"></script>
+    <script src="/static/js/local/jquery.easyfader.min.js"></script>
+    <script src="/static/js/local/hc-sticky.js"></script>
+
+    <script src="/static/js/local/scrollReveal.js"></script>
+
+
+    <script src="/static/js/layui/layui.all.js"></script>
+    <script src="/static/js/common/common.js"></script>
+    <!--[if lt IE 9]>
+    <script src="/static/js/local/modernizr.js"></script>
+    <![endif]-->
+</head>
+<body>
+<header class="header-navigation" id="header">
+    <nav>
+        <div class="logo"><a href="./index.html">我的博客</a></div>
+        <ul id="starlist">
+            <li><a href="index.html">网站首页</a></li>
+        </ul>
+        <div class="searchbox">
+            <div id="search_bar" class="search_bar">
+                <form id="searchform" action="[!--news.url--]e/search/index.php" method="post" name="searchform">
+                    <input class="input" placeholder="想搜点什么呢.." type="text" name="keyboard" id="keyboard">
+                    <input type="hidden" name="show" value="title"/>
+                    <input type="hidden" name="tempid" value="1"/>
+                    <input type="hidden" name="tbname" value="news">
+                    <input type="hidden" name="Submit" value="搜索"/>
+                    <p class="search_ico"><span></span></p>
+                </form>
+            </div>
+        </div>
+    </nav>
+</header>
+<article>
+    <main>
+        <div id="article-list">
+        </div>
+        <div class="pagelist" id="pagelist"></div>
+    </main>
+    <aside class="r_box">
+
+        <div class="tuijian">
+            <h2 id="tab"><a href="#" class="current">点击排行</a><a href="#">站长推荐</a></h2>
+
+            <div id="content">
+
+                <ul style="display:block;" id="ranks">
+                </ul>
+                <ul id="for-you">
+
+                </ul>
+            </div>
+        </div>
+        <div class="guanzhu">
+            <h2>关注我 么么哒</h2>
+            <ul>
+                <img src="images/wx.jpg">
+            </ul>
+        </div>
+
+    </aside>
+</article>
+<footer>
+    <p>Design by <a href="http://www.yangqq.com" target="_blank">我的博客</a> <a href="/">蜀ICP备11002373号-1</a><a href="/"
+                                                                                                             class="links">友情链接</a>
+    </p>
+</footer>
+<a href="#" class="cd-top">Top</a>
+</body>
+
+
+<script id="starlist-script" type="text/html">
+    <li><a href="index.html">网站首页</a></li>
+    {{#  layui.each(d.column, function(index, item){ }}
+    <li><a href="{{ item.link }}?cid={{ item.id }}">{{ item.name }}</a></li>
+    {{# }) }}
+
+</script>
+<!--like-num-->
+
+
+<script id="ranks-script" type="text/html">
+    {{#  layui.each(d.ranks, function(index, item){ }}
+    <li><a href="/front/article.html?id={{ item.id }}" target="_blank">{{ item.title }}</a></li>
+    {{# }) }}
+</script>
+<script id="for-you-script" type="text/html">
+    {{#  layui.each(d.forYou, function(index, item){ }}
+    <li><a href="/front/article.html?id={{ item.id }}" target="_blank">{{ item.title }}</a></li>
+    {{# }) }}
+</script>
+
+<script id="article-list-script" type="text/html">
+    {{#  layui.each(d.list, function(index, item){ }}
+    <div class="blogs" data-scroll-reveal="enter bottom over 1s">
+        <h3 class="blogtitle"><a href="/front/article.html?id={{ item.id }}" target="_blank">{{ item.title }}</a></h3>
+        <span class="blogpic"><a href="/front/article.html?id={{ item.id }}" title=""><img src="{{ item.image }}"
+                                                                                           alt=""></a></span>
+        <p class="blogtext">{{ item.intro }} </p>
+        <div class="bloginfo">
+            <ul>
+                <li class="lmname">{{ item.columnName }}</li>
+                <li class="timer">{{ item.createTime }}</li>
+                <li class="view"><span>{{ item.viewNum }}</span>已阅读</li>
+                <li class="like">{{ item.likesNum }}</li>
+            </ul>
+        </div>
+    </div>
+    {{# }) }}
+</script>
+
+<script>
+    var columnApi = common.host + "/api/index/column";
+    var columnId = parseInt(common.getQueryString('cid'));
+    layui.use(['laytpl', 'laypage'], function () {
+        var layTpl = layui.laytpl, laypage = layui.laypage;
+        common.url = columnApi;
+        common.method = 'POST';
+        common.data = JSON.stringify({columnId: columnId, page: 1, pageSize: 5});
+        common.ajax(function (res) {
+            layTpl(document.getElementById('starlist-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("starlist").innerHTML = html;
+            });
+            //article-list-script
+            layTpl(document.getElementById('article-list-script').innerHTML).render(res.data.articles, function (html) {
+                document.getElementById("article-list").innerHTML = html;
+
+            });
+
+            //ranks
+            layTpl(document.getElementById('ranks-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("ranks").innerHTML = html;
+            });
+            //forYou
+            layTpl(document.getElementById('for-you-script').innerHTML).render(res.data, function (html) {
+                document.getElementById("for-you").innerHTML = html;
+            });
+            laypage.render({
+                elem: 'pagelist'
+                , count: res.data.articles.count //数据总数
+                ,limit:res.data.articles.pageSize
+                , jump: function (obj) {
+                    common.url = columnApi;
+                    common.method = 'POST';
+                    common.data = JSON.stringify({columnId: columnId, page: obj.curr, pageSize: 5});
+                    common.ajax(function (res) {
+                        //article-list-script
+                        layTpl(document.getElementById('article-list-script').innerHTML).render(res.data.articles, function (html) {
+                            document.getElementById("article-list").innerHTML = html;
+
+                        });
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+</html>

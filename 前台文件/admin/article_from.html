@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="/static/js/layui/css/layui.css" rel="stylesheet"/>
+    <script src="/static/js/jquery/jquery-2.0.3.min.js"></script>
+    <script src="/static/js/layui/layui.all.js"></script>
+    <script src="/static/js/common/common.js"></script>
+</head>
+<body>
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>栏目添加/修改</legend>
+</fieldset>
+
+<form class="layui-form" id="navForm" action="" lay-filter="nav">
+    <input name="id" type="hidden" value="{{ d.id }}">
+    <input name="image" type="hidden" id="imgInput" value="{{ d.imagePath }}">
+    <div class="layui-form-item">
+        <label class="layui-form-label">名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="title" value="{{ d.title }}" autocomplete="off" placeholder="请输入名称"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">栏目</label>
+        <div class="layui-input-block">
+            <select name="columnId" lay-filter="column" id="column-select">
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">图片</label>
+        <div class="layui-input-block">
+            <div class="layui-upload">
+                <button type="button" class="layui-btn" id="test1">上传图片</button>
+                <div class="layui-upload-list">
+                    <img class="layui-upload-img" src="{{ d.image }}" id="demo1" style="height: 100px;width: 200px;"/>
+                    <p id="demoText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">内容</label>
+        <div class="layui-input-block">
+            <textarea id="article-content" name="content" style="display: none;">
+                {{ d.content }}
+            </textarea>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">站长推荐</label>
+        <div class="layui-input-block">
+            <input type="checkbox"   checked="{{ d.forYou }}" name="forYou" value=1 lay-skin="switch" lay-filter="switchTest" lay-text="ON|OFF">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+            <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+        </div>
+    </div>
+</form>
+<script id="columnView" type="text/html">
+    <option value=""></option>
+    {{#  layui.each(d.list, function(index, item){ }}
+    <option {{# if( item.id=== d.columnId ){ }} selected {{# } }} value="{{ item.id }}">{{ item.name }}</option>
+    {{#  }); }}
+
+</script>
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+<script>
+    var addAndUpdataApi = common.host + "/admin/article";
+    var columnListApi = common.host + "/admin/nav/list";
+    layui.use(['form', 'layedit', 'laytpl', 'upload'], function () {
+        var form = layui.form
+            , layedit = layui.layedit
+            , layTpl = layui.laytpl
+            , upload = layui.upload;
+        var navForm = document.getElementById("navForm")
+        var getTpl = navForm.innerHTML
+            , view = document.getElementById('navForm');
+        var data = {
+            "title": "",
+            "content": "",
+            "id": "",
+            "imgInput": "",
+            "image": "",
+            "forYou": 0,
+            "columnId": ""
+        };
+        var editindex;
+        var uploadInst;
+        var id = parseInt(common.getQueryString("id"));
+        if (id > 0) {
+
+            common.url = common.host + "/admin/article/info";
+            common.data = JSON.stringify({"id": id});
+            common.ajax(function (res) {
+                layTpl(getTpl).render(res.data, function (html) {
+                    view.innerHTML = html;
+                });
+                editindex = layedit.build('article-content', {
+                    uploadImage: {
+                        url: common.uploadApi, //接口url
+                        type: 'post' //默认post
+                    }
+                });
+                var art = res.data
+                common.url = columnListApi;
+                common.method = 'GET';
+                common.data = '';
+                common.ajax(function (res) {
+                    var m = {columnId: art.column_id, list: res.data};
+                    layTpl(document.getElementById("columnView").innerHTML).render(m, function (html) {
+                        document.getElementById("column-select").innerHTML = html;
+                    });
+                    form.render();
+                });
+                uploadInit();
+                form.render();
+            })
+        } else {
+            common.url = columnListApi;
+            common.method = 'GET';
+            common.data = '';
+            common.ajax(function (res) {
+                var m = {columnId: 0, list: res.data};
+                layTpl(document.getElementById("columnView").innerHTML).render(m, function (html) {
+                    document.getElementById("column-select").innerHTML = html;
+                });
+                form.render();
+            });
+
+
+        }
+        layTpl(getTpl).render(data, function (html) {
+            view.innerHTML = html;
+        });
+
+        //监听提交
+        form.on('submit(demo1)', function (data) {
+            common.url = addAndUpdataApi;
+            common.method = 'POST';
+            data.field.id = parseInt(data.field.id);
+            data.field.columnId = parseInt(data.field.columnId);
+
+            if (data.field.forYou == 1) {
+                data.field.forYou = true;
+            }else{
+                data.field.forYou = false;
+            }
+            data.field.content = layedit.getContent(editindex);
+            common.data = JSON.stringify(data.field);
+            common.ajax(function (res) {
+                if (res.code === 0) {
+                    common.layerMsg(res.msg, '/admin/article.html', 0);
+                    return
+                }
+                common.layerMsg(res.msg);
+
+                return
+            }, function (res) {
+                console.log(res)
+            });
+
+            return false;
+        });
+
+        function uploadInit() {
+            uploadInst = upload.render({
+                elem: '#test1'
+                , url: common.uploadApi
+                , before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $('#demo1').attr('src', result); //图片链接（base64）
+                    });
+                }
+                , done: function (res) {
+                    //如果上传失败
+                    if (res.code > 0) {
+                        return common.layerMsg('上传失败');
+                    }
+
+                    document.getElementById("imgInput").value = res.data.imagePath;
+                }
+                , error: function () {
+                    //演示失败状态，并实现重传
+                    var demoText = $('#demoText');
+                    demoText.html('<span style="color: #FF5722;">上传失败</span> <a class="layui-btn layui-btn-xs demo-reload">重试</a>');
+                    demoText.find('.demo-reload').on('click', function () {
+                        uploadInst.upload();
+                    });
+                }
+            });
+        }
+
+        uploadInit();
+        editindex = layedit.build('article-content', {
+            uploadImage: {
+                url: common.uploadApi, //接口url
+                type: 'post' //默认post
+            }
+        });
+
+        form.render(); //更新全部
+    });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <link href="/static/js/layui/css/layui.css" rel="stylesheet"/>
+    <script src="/static/js/jquery/jquery-2.0.3.min.js"></script>
+    <script src="/static/js/layui/layui.all.js"></script>
+    <script src="/static/js/common/common.js"></script>
+</head>
+<body>
+<table class="layui-hide" id="test" lay-filter="test">
+    <script type="text/html" id="toolbarDemo">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加</button>
+        </div>
+    </script>
+</table>
+
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+</body>
+
+
+<!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+<script>
+    var addOrEditUrl = '/admin/nav_from.html'
+    layui.use('table', function () {
+        var table = layui.table;
+
+        table.render({
+            elem: '#test'
+            , url: common.host + '/admin/nav/list'
+            , toolbar: '#toolbarDemo'
+            , title: '导航栏数据表'
+            , cols: [[
+                {type: 'checkbox', fixed: 'left'}
+                , {field: 'id', title: 'ID', width: 80, fixed: 'left', unresize: true, sort: true}
+                , {field: 'name', title: '名称', width: 120}
+                , {field: 'link', title: '链接', width: 280, sort: true}
+                , {field: 'createTime', title: '创建时间', width: 280}
+                , {fixed: 'right', title: '操作', toolbar: '#barDemo'}
+            ]]
+        });
+
+        //头工具栏事件
+        table.on('toolbar(test)', function (obj) {
+            var checkStatus = table.checkStatus(obj.config.id);
+            switch (obj.event) {
+                case 'add':
+                    common.jump(addOrEditUrl, 0)
+                    break;
+            }
+        });
+
+        //监听行工具事件
+        table.on('tool(test)', function (obj) {
+            var data = obj.data;
+            //console.log(obj)
+            if (obj.event === 'del') {
+                common.url = common.host + "/admin/nav";
+                common.method = "DELETE";
+                common.data = JSON.stringify(data)
+                common.delete(data.name, function (res) {
+                    if (res.code === 0) {
+                        common.layerMsg(res.msg,'',0)
+                        obj.del();
+                    }
+                });
+
+            } else if (obj.event === 'edit') {
+                common.jump(addOrEditUrl + "?id=" + data.id, 0)
+            }
+        });
+    });
+</script>
+
+</html>
